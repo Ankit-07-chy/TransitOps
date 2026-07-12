@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -14,19 +15,157 @@ import {
 import { PageHeader } from '@/components/shared/PageHeader';
 import { KpiCard } from '@/components/shared/KpiCard';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { DetailDialog, DetailColumn } from '@/components/shared/DetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/spinner';
-import { DriverStatusBadge } from '@/components/shared/StatusBadge';
+import { DriverStatusBadge, TripStatusBadge } from '@/components/shared/StatusBadge';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
-import { SafetyDashboardData } from '@/lib/types';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { Driver, SafetyDashboardData, Trip } from '@/lib/types';
+import { formatDate, formatDateTime, formatNumber } from '@/lib/utils';
+
+type SafetyModalKey =
+  | 'ACTIVE_DRIVERS'
+  | 'ON_DUTY'
+  | 'SUSPENDED'
+  | 'AVG_SCORE'
+  | 'EXPIRED'
+  | 'EXPIRING'
+  | 'PENDING_REVIEWS';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function scoreBadge(score: number) {
+  return (
+    <Badge tone={score >= 70 ? 'success' : score >= 50 ? 'warning' : 'danger'}>{score}</Badge>
+  );
+}
+
+const driverColumns: DetailColumn<any>[] = [
+  { header: 'Name', render: (d: Driver) => <span className="font-medium">{d.name}</span> },
+  { header: 'License No', render: (d: Driver) => d.licenseNumber },
+  {
+    header: 'License Expiry',
+    render: (d: Driver) => (
+      <span className="text-muted-foreground">{formatDate(d.licenseExpiryDate)}</span>
+    ),
+  },
+  { header: 'Status', render: (d: Driver) => <DriverStatusBadge status={d.status} /> },
+  { header: 'Safety Score', render: (d: Driver) => scoreBadge(d.safetyScore) },
+];
+
+const licenseColumns: DetailColumn<any>[] = [
+  { header: 'Name', render: (d) => <span className="font-medium">{d.name}</span> },
+  { header: 'License No', render: (d) => d.licenseNumber },
+  { header: 'Category', render: (d) => d.licenseCategory },
+  {
+    header: 'Expiry',
+    render: (d) => (
+      <Badge tone={d.expired ? 'danger' : 'warning'}>
+        {d.expired
+          ? `Expired ${formatDate(d.licenseExpiryDate)}`
+          : `${d.daysUntilExpiry}d left`}
+      </Badge>
+    ),
+  },
+  { header: 'Status', render: (d) => <DriverStatusBadge status={d.status} /> },
+];
 
 export function SafetyOfficerDashboard() {
   const { data, loading, error } = useApi<SafetyDashboardData>(() => api.get('/dashboard'), []);
+
+  const [activeModal, setActiveModal] = useState<SafetyModalKey | null>(null);
+  const [rows, setRows] = useState<any[]>([]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+
+  const modals: Record<
+    SafetyModalKey,
+    { title: string; load: () => Promise<any[]>; columns: DetailColumn<any>[] }
+  > = {
+    ACTIVE_DRIVERS: {
+      title: 'Active Drivers',
+      load: () => api.get<Driver[]>('/drivers'),
+      columns: driverColumns,
+    },
+    ON_DUTY: {
+      title: 'Drivers On Duty',
+      load: async () =>
+        (await api.get<Driver[]>('/drivers')).filter(
+          (d) => d.status === 'AVAILABLE' || d.status === 'ON_TRIP',
+        ),
+      columns: driverColumns,
+    },
+    SUSPENDED: {
+      title: 'Suspended Drivers',
+      load: () => api.get<Driver[]>('/drivers', { status: 'SUSPENDED' }),
+      columns: driverColumns,
+    },
+    AVG_SCORE: {
+      title: 'Safety Scores (lowest first)',
+      load: async () =>
+        (await api.get<Driver[]>('/drivers')).sort((a, b) => a.safetyScore - b.safetyScore),
+      columns: driverColumns,
+    },
+    EXPIRED: {
+      title: 'Expired Licenses',
+      load: () => Promise.resolve((data?.expiringLicenses ?? []).filter((d) => d.expired)),
+      columns: licenseColumns,
+    },
+    EXPIRING: {
+      title: 'Licenses Expiring in 30 Days',
+      load: () => Promise.resolve((data?.expiringLicenses ?? []).filter((d) => !d.expired)),
+      columns: licenseColumns,
+    },
+    PENDING_REVIEWS: {
+      title: 'Trips Awaiting Safety Review',
+      load: () => api.get<Trip[]>('/trips/pending-safety-review'),
+      columns: [
+        {
+          header: 'Trip #',
+          render: (t: Trip) => <span className="font-medium">{t.tripNumber}</span>,
+        },
+        { header: 'Driver', render: (t: Trip) => t.driver?.name ?? '—' },
+        {
+          header: 'Route',
+          render: (t: Trip) => (
+            <span className="text-muted-foreground">
+              {t.source} → {t.destination}
+            </span>
+          ),
+        },
+        {
+          header: 'Distance',
+          render: (t: Trip) => (t.actualDistance ? `${formatNumber(t.actualDistance)} km` : '—'),
+        },
+        { header: 'Status', render: (t: Trip) => <TripStatusBadge status={t.status} /> },
+        {
+          header: 'Completed',
+          render: (t: Trip) => (
+            <span className="text-muted-foreground">{formatDateTime(t.completedAt)}</span>
+          ),
+        },
+      ],
+    },
+  };
+
+  useEffect(() => {
+    if (!activeModal) {
+      setRows([]);
+      setModalError(null);
+      return;
+    }
+    setModalLoading(true);
+    setModalError(null);
+    modals[activeModal]
+      .load()
+      .then(setRows)
+      .catch((e) => setModalError(e instanceof ApiError ? e.message : 'Failed to load details'))
+      .finally(() => setModalLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeModal]);
 
   return (
     <div>
@@ -48,18 +187,25 @@ export function SafetyOfficerDashboard() {
       {data && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
-            <KpiCard label="Active Drivers" value={data.kpis.activeDrivers} icon={Users} />
+            <KpiCard
+              label="Active Drivers"
+              value={data.kpis.activeDrivers}
+              icon={Users}
+              onClick={() => setActiveModal('ACTIVE_DRIVERS')}
+            />
             <KpiCard
               label="On Duty"
               value={data.kpis.driversOnDuty}
               icon={UserCheck}
               accent="success"
+              onClick={() => setActiveModal('ON_DUTY')}
             />
             <KpiCard
               label="Suspended"
               value={data.kpis.suspendedDrivers}
               icon={UserX}
               accent="danger"
+              onClick={() => setActiveModal('SUSPENDED')}
             />
             <KpiCard
               label="Avg Safety Score"
@@ -67,18 +213,21 @@ export function SafetyOfficerDashboard() {
               icon={Gauge}
               accent={data.kpis.avgSafetyScore >= 70 ? 'success' : 'warning'}
               hint="Across active drivers"
+              onClick={() => setActiveModal('AVG_SCORE')}
             />
             <KpiCard
               label="Expired Licenses"
               value={data.kpis.expiredLicenses}
               icon={ShieldAlert}
               accent="danger"
+              onClick={() => setActiveModal('EXPIRED')}
             />
             <KpiCard
               label="Expiring in 30 Days"
               value={data.kpis.expiringSoon}
               icon={CalendarClock}
               accent="warning"
+              onClick={() => setActiveModal('EXPIRING')}
             />
             <KpiCard
               label="Pending Safety Reviews"
@@ -86,6 +235,7 @@ export function SafetyOfficerDashboard() {
               icon={ClipboardCheck}
               accent="info"
               hint="Completed trips awaiting review"
+              onClick={() => setActiveModal('PENDING_REVIEWS')}
             />
           </div>
 
