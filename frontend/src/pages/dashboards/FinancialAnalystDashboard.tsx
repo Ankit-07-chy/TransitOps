@@ -249,24 +249,28 @@ export function FinancialAnalystDashboard() {
               value={formatCurrency(data.kpis.todaysExpensesTotal)}
               icon={Receipt}
               accent="danger"
+              onClick={() => setActiveModal('TODAY')}
             />
             <KpiCard
               label="Expenses (Month)"
               value={formatCurrency(data.kpis.monthExpenses)}
               icon={Wallet}
               accent="warning"
+              onClick={() => setActiveModal('MONTH_EXPENSES')}
             />
             <KpiCard
               label="Fuel Cost (Month)"
               value={formatCurrency(data.kpis.monthFuelCost)}
               icon={Fuel}
               accent="info"
+              onClick={() => setActiveModal('FUEL')}
             />
             <KpiCard
               label="Maintenance (Month)"
               value={formatCurrency(data.kpis.monthMaintenanceCost)}
               icon={Wrench}
               accent="warning"
+              onClick={() => setActiveModal('MAINTENANCE')}
             />
             <KpiCard
               label="Operational Cost (Month)"
@@ -274,6 +278,7 @@ export function FinancialAnalystDashboard() {
               icon={DollarSign}
               accent="danger"
               hint="Expenses + fuel + maintenance"
+              onClick={() => setActiveModal('OP_COST')}
             />
             <KpiCard
               label="Revenue (Month)"
@@ -281,6 +286,7 @@ export function FinancialAnalystDashboard() {
               icon={TrendingUp}
               accent="success"
               hint="From completed trips"
+              onClick={() => setActiveModal('REVENUE')}
             />
           </div>
 
@@ -407,6 +413,16 @@ export function FinancialAnalystDashboard() {
           </Card>
         </div>
       )}
+
+      <DetailDialog
+        open={!!activeModal}
+        onClose={() => setActiveModal(null)}
+        title={activeModal ? modals[activeModal].title : ''}
+        loading={modalLoading}
+        error={modalError}
+        rows={rows}
+        columns={activeModal ? modals[activeModal].columns : []}
+      />
     </div>
   );
 }
