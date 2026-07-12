@@ -7,6 +7,7 @@ import {
   DollarSign,
   Fuel,
   Gauge,
+  Search,
   Truck,
   UserCheck,
   Wrench,
@@ -151,7 +152,7 @@ export function DashboardPage() {
       setCurrentPage(1);
     };
 
-    const thClass = (field: string) =>
+    const thClass = () =>
       "cursor-pointer hover:bg-muted/50 select-none transition-colors";
 
     const sortIndicator = (field: string) => {
@@ -162,14 +163,14 @@ export function DashboardPage() {
     if (activeModal === 'ACTIVE_VEHICLES' || activeModal === 'FLEET_UTILIZATION') {
       return (
         <>
-          <TH onClick={() => handleSort('registrationNo')} className={thClass('registrationNo')}>Reg No{sortIndicator('registrationNo')}</TH>
-          <TH onClick={() => handleSort('name')} className={thClass('name')}>Name{sortIndicator('name')}</TH>
-          <TH onClick={() => handleSort('type')} className={thClass('type')}>Type{sortIndicator('type')}</TH>
+          <TH onClick={() => handleSort('registrationNo')} className={thClass()}>Reg No{sortIndicator('registrationNo')}</TH>
+          <TH onClick={() => handleSort('name')} className={thClass()}>Name{sortIndicator('name')}</TH>
+          <TH onClick={() => handleSort('type')} className={thClass()}>Type{sortIndicator('type')}</TH>
           <TH>Driver Assigned</TH>
-          <TH onClick={() => handleSort('maxLoadCapacity')} className={thClass('maxLoadCapacity')}>Capacity{sortIndicator('maxLoadCapacity')}</TH>
-          <TH onClick={() => handleSort('status')} className={thClass('status')}>Status{sortIndicator('status')}</TH>
+          <TH onClick={() => handleSort('maxLoadCapacity')} className={thClass()}>Capacity{sortIndicator('maxLoadCapacity')}</TH>
+          <TH onClick={() => handleSort('status')} className={thClass()}>Status{sortIndicator('status')}</TH>
           <TH>Current Location</TH>
-          <TH onClick={() => handleSort('region')} className={thClass('region')}>Region{sortIndicator('region')}</TH>
+          <TH onClick={() => handleSort('region')} className={thClass()}>Region{sortIndicator('region')}</TH>
           <TH>Last Maint.</TH>
           <TH>Next Maint. Due</TH>
         </>
@@ -179,11 +180,11 @@ export function DashboardPage() {
     if (activeModal === 'AVAILABLE_VEHICLES') {
       return (
         <>
-          <TH onClick={() => handleSort('registrationNo')} className={thClass('registrationNo')}>Reg No{sortIndicator('registrationNo')}</TH>
-          <TH onClick={() => handleSort('type')} className={thClass('type')}>Type{sortIndicator('type')}</TH>
-          <TH onClick={() => handleSort('maxLoadCapacity')} className={thClass('maxLoadCapacity')}>Capacity{sortIndicator('maxLoadCapacity')}</TH>
-          <TH onClick={() => handleSort('region')} className={thClass('region')}>Region{sortIndicator('region')}</TH>
-          <TH onClick={() => handleSort('odometer')} className={thClass('odometer')}>Odometer{sortIndicator('odometer')}</TH>
+          <TH onClick={() => handleSort('registrationNo')} className={thClass()}>Reg No{sortIndicator('registrationNo')}</TH>
+          <TH onClick={() => handleSort('type')} className={thClass()}>Type{sortIndicator('type')}</TH>
+          <TH onClick={() => handleSort('maxLoadCapacity')} className={thClass()}>Capacity{sortIndicator('maxLoadCapacity')}</TH>
+          <TH onClick={() => handleSort('region')} className={thClass()}>Region{sortIndicator('region')}</TH>
+          <TH onClick={() => handleSort('odometer')} className={thClass()}>Odometer{sortIndicator('odometer')}</TH>
           <TH>Availability</TH>
         </>
       );
@@ -192,11 +193,11 @@ export function DashboardPage() {
     if (activeModal === 'MAINTENANCE_VEHICLES') {
       return (
         <>
-          <TH onClick={() => handleSort('vehicle.name')} className={thClass('vehicle.name')}>Vehicle{sortIndicator('vehicle.name')}</TH>
-          <TH onClick={() => handleSort('description')} className={thClass('description')}>Type / Desc{sortIndicator('description')}</TH>
-          <TH onClick={() => handleSort('openedAt')} className={thClass('openedAt')}>Started On{sortIndicator('openedAt')}</TH>
+          <TH onClick={() => handleSort('vehicle.name')} className={thClass()}>Vehicle{sortIndicator('vehicle.name')}</TH>
+          <TH onClick={() => handleSort('description')} className={thClass()}>Type / Desc{sortIndicator('description')}</TH>
+          <TH onClick={() => handleSort('openedAt')} className={thClass()}>Started On{sortIndicator('openedAt')}</TH>
           <TH>Expected Comp.</TH>
-          <TH onClick={() => handleSort('cost')} className={thClass('cost')}>Est. Cost{sortIndicator('cost')}</TH>
+          <TH onClick={() => handleSort('cost')} className={thClass()}>Est. Cost{sortIndicator('cost')}</TH>
           <TH>Status</TH>
           <TH>Technician</TH>
         </>
@@ -206,14 +207,14 @@ export function DashboardPage() {
     if (activeModal === 'ACTIVE_TRIPS') {
       return (
         <>
-          <TH onClick={() => handleSort('tripNumber')} className={thClass('tripNumber')}>Trip No{sortIndicator('tripNumber')}</TH>
-          <TH onClick={() => handleSort('source')} className={thClass('source')}>Source{sortIndicator('source')}</TH>
-          <TH onClick={() => handleSort('destination')} className={thClass('destination')}>Destination{sortIndicator('destination')}</TH>
-          <TH onClick={() => handleSort('driver.name')} className={thClass('driver.name')}>Driver{sortIndicator('driver.name')}</TH>
-          <TH onClick={() => handleSort('vehicle.registrationNo')} className={thClass('vehicle.registrationNo')}>Vehicle{sortIndicator('vehicle.registrationNo')}</TH>
+          <TH onClick={() => handleSort('tripNumber')} className={thClass()}>Trip No{sortIndicator('tripNumber')}</TH>
+          <TH onClick={() => handleSort('source')} className={thClass()}>Source{sortIndicator('source')}</TH>
+          <TH onClick={() => handleSort('destination')} className={thClass()}>Destination{sortIndicator('destination')}</TH>
+          <TH onClick={() => handleSort('driver.name')} className={thClass()}>Driver{sortIndicator('driver.name')}</TH>
+          <TH onClick={() => handleSort('vehicle.registrationNo')} className={thClass()}>Vehicle{sortIndicator('vehicle.registrationNo')}</TH>
           <TH>Cargo</TH>
-          <TH onClick={() => handleSort('cargoWeight')} className={thClass('cargoWeight')}>Weight (kg){sortIndicator('cargoWeight')}</TH>
-          <TH onClick={() => handleSort('dispatchedAt')} className={thClass('dispatchedAt')}>Departure{sortIndicator('dispatchedAt')}</TH>
+          <TH onClick={() => handleSort('cargoWeight')} className={thClass()}>Weight (kg){sortIndicator('cargoWeight')}</TH>
+          <TH onClick={() => handleSort('dispatchedAt')} className={thClass()}>Departure{sortIndicator('dispatchedAt')}</TH>
           <TH>Expected Arrival</TH>
           <TH>Status</TH>
           <TH>Dist Remaining</TH>
@@ -224,13 +225,13 @@ export function DashboardPage() {
     if (activeModal === 'DRIVERS_ON_DUTY') {
       return (
         <>
-          <TH onClick={() => handleSort('name')} className={thClass('name')}>Name{sortIndicator('name')}</TH>
-          <TH onClick={() => handleSort('licenseNumber')} className={thClass('licenseNumber')}>License No{sortIndicator('licenseNumber')}</TH>
-          <TH onClick={() => handleSort('licenseExpiryDate')} className={thClass('licenseExpiryDate')}>License Expiry{sortIndicator('licenseExpiryDate')}</TH>
-          <TH onClick={() => handleSort('status')} className={thClass('status')}>Status{sortIndicator('status')}</TH>
+          <TH onClick={() => handleSort('name')} className={thClass()}>Name{sortIndicator('name')}</TH>
+          <TH onClick={() => handleSort('licenseNumber')} className={thClass()}>License No{sortIndicator('licenseNumber')}</TH>
+          <TH onClick={() => handleSort('licenseExpiryDate')} className={thClass()}>License Expiry{sortIndicator('licenseExpiryDate')}</TH>
+          <TH onClick={() => handleSort('status')} className={thClass()}>Status{sortIndicator('status')}</TH>
           <TH>Assigned Vehicle</TH>
           <TH>Current Trip</TH>
-          <TH onClick={() => handleSort('safetyScore')} className={thClass('safetyScore')}>Safety Score{sortIndicator('safetyScore')}</TH>
+          <TH onClick={() => handleSort('safetyScore')} className={thClass()}>Safety Score{sortIndicator('safetyScore')}</TH>
         </>
       );
     }
@@ -238,12 +239,12 @@ export function DashboardPage() {
     if (activeModal === 'TODAYS_EXPENSES') {
       return (
         <>
-          <TH onClick={() => handleSort('type')} className={thClass('type')}>Expense Type{sortIndicator('type')}</TH>
-          <TH onClick={() => handleSort('amount')} className={thClass('amount')}>Amount{sortIndicator('amount')}</TH>
-          <TH onClick={() => handleSort('vehicle.registrationNo')} className={thClass('vehicle.registrationNo')}>Vehicle{sortIndicator('vehicle.registrationNo')}</TH>
+          <TH onClick={() => handleSort('type')} className={thClass()}>Expense Type{sortIndicator('type')}</TH>
+          <TH onClick={() => handleSort('amount')} className={thClass()}>Amount{sortIndicator('amount')}</TH>
+          <TH onClick={() => handleSort('vehicle.registrationNo')} className={thClass()}>Vehicle{sortIndicator('vehicle.registrationNo')}</TH>
           <TH>Driver/User</TH>
-          <TH onClick={() => handleSort('notes')} className={thClass('notes')}>Description{sortIndicator('notes')}</TH>
-          <TH onClick={() => handleSort('date')} className={thClass('date')}>Date & Time{sortIndicator('date')}</TH>
+          <TH onClick={() => handleSort('notes')} className={thClass()}>Description{sortIndicator('notes')}</TH>
+          <TH onClick={() => handleSort('date')} className={thClass()}>Date & Time{sortIndicator('date')}</TH>
           <TH>Created By</TH>
         </>
       );
@@ -252,12 +253,12 @@ export function DashboardPage() {
     if (activeModal === 'FUEL_LOGS') {
       return (
         <>
-          <TH onClick={() => handleSort('vehicle.registrationNo')} className={thClass('vehicle.registrationNo')}>Vehicle{sortIndicator('vehicle.registrationNo')}</TH>
-          <TH onClick={() => handleSort('trip.driver.name')} className={thClass('trip.driver.name')}>Driver{sortIndicator('trip.driver.name')}</TH>
-          <TH onClick={() => handleSort('liters')} className={thClass('liters')}>Liters{sortIndicator('liters')}</TH>
-          <TH onClick={() => handleSort('cost')} className={thClass('cost')}>Cost{sortIndicator('cost')}</TH>
+          <TH onClick={() => handleSort('vehicle.registrationNo')} className={thClass()}>Vehicle{sortIndicator('vehicle.registrationNo')}</TH>
+          <TH onClick={() => handleSort('trip.driver.name')} className={thClass()}>Driver{sortIndicator('trip.driver.name')}</TH>
+          <TH onClick={() => handleSort('liters')} className={thClass()}>Liters{sortIndicator('liters')}</TH>
+          <TH onClick={() => handleSort('cost')} className={thClass()}>Cost{sortIndicator('cost')}</TH>
           <TH>Trip Ref</TH>
-          <TH onClick={() => handleSort('date')} className={thClass('date')}>Logged Time{sortIndicator('date')}</TH>
+          <TH onClick={() => handleSort('date')} className={thClass()}>Logged Time{sortIndicator('date')}</TH>
         </>
       );
     }
