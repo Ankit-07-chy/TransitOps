@@ -66,8 +66,8 @@ export function DetailDialog<T extends { id?: string }>({
   const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
-    <Dialog open={open} onClose={onClose} title={title}>
-      <div className="w-full max-w-4xl space-y-4">
+    <Dialog open={open} onClose={onClose} title={title} className="max-w-4xl">
+      <div className="w-full space-y-4">
         {summary}
 
         <div className="flex items-center justify-between gap-2">
