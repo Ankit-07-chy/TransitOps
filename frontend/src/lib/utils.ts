@@ -39,6 +39,24 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   });
 }
 
+export function isToday(value: string | Date | null | undefined): boolean {
+  if (!value) return false;
+  const d = new Date(value);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
+
+export function isThisMonth(value: string | Date | null | undefined): boolean {
+  if (!value) return false;
+  const d = new Date(value);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+}
+
 /** Value for an <input type="date"> from a date string. */
 export function toDateInput(value: string | Date | null | undefined): string {
   if (!value) return '';
