@@ -8,9 +8,12 @@ const maintInclude = {
 };
 
 export const MaintenanceService = {
-  async list(isActive?: boolean) {
+  async list(isActive?: boolean, vehicleId?: string) {
+    const where: any = {};
+    if (isActive !== undefined) where.isActive = isActive;
+    if (vehicleId) where.vehicleId = vehicleId;
     return prisma.maintenanceLog.findMany({
-      where: isActive === undefined ? {} : { isActive },
+      where,
       include: maintInclude,
       orderBy: { openedAt: 'desc' },
     });

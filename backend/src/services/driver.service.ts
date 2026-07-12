@@ -115,4 +115,16 @@ export const DriverService = {
       return deletedDriver;
     });
   },
+
+  async getAssignedVehicleId(driverId: string | null): Promise<string | null> {
+    if (!driverId) return null;
+    const activeTrip = await prisma.trip.findFirst({
+      where: {
+        driverId,
+        status: 'DISPATCHED',
+      },
+      select: { vehicleId: true },
+    });
+    return activeTrip?.vehicleId || null;
+  },
 };

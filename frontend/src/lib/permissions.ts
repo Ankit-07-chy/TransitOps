@@ -43,7 +43,7 @@ export const MODULE_ACCESS: Record<ModuleKey, Role[]> = {
   vehicles: ['FLEET_MANAGER', 'DRIVER', 'FINANCIAL_ANALYST'],
   drivers: ['FLEET_MANAGER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'],
   trips: ['FLEET_MANAGER', 'DRIVER', 'SAFETY_OFFICER'],
-  maintenance: ['FLEET_MANAGER', 'FINANCIAL_ANALYST'],
+  maintenance: ['FLEET_MANAGER', 'FINANCIAL_ANALYST', 'DRIVER'],
   'fuel-expenses': ['DRIVER', 'FINANCIAL_ANALYST'],
   reports: ['FLEET_MANAGER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'],
 };

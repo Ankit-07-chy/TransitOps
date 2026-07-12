@@ -36,7 +36,7 @@ router.get(
 );
 router.post(
   '/maintenance',
-  requireRole('FLEET_MANAGER'),
+  requireRole('FLEET_MANAGER', 'DRIVER'),
   validate({ body: createMaintenanceSchema }),
   asyncHandler(MaintenanceController.open),
 );
@@ -76,7 +76,7 @@ router.get(
 );
 router.post(
   '/expenses',
-  requireRole('FINANCIAL_ANALYST'),
+  requireRole('FINANCIAL_ANALYST', 'DRIVER'),
   validate({ body: createExpenseSchema }),
   asyncHandler(ExpenseController.create),
 );
