@@ -25,7 +25,6 @@ TransitOps is a centralized, production-grade web platform designed to replace l
 9. [Demo Accounts](#demo-accounts)
 10. [API Reference](#api-reference)
 11. [Project Directory Structure](#project-directory-structure)
-12. [Testing & Quality Assurance](#testing--quality-assurance)
 
 ---
 
@@ -390,9 +389,4 @@ TransitOPS/
 
 ---
 
-## Testing & Quality Assurance
 
-Refer to [testing-plan.md](testing-plan.md) for full manual test procedures, covering:
-- **Authentication & RBAC limits**: Verification of path blockades for each user tier.
-- **Positive/Negative Validation**: Entering negative values, incorrect registration formats, or oversized cargo.
-- **Workflow Audits**: Testing the E2E lifecycle (creating a draft trip, dispatching, triggering block actions on vehicles, completing the trip, logging fuel, checking updated financial reports).
