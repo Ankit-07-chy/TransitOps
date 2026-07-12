@@ -42,7 +42,7 @@ export const ExpenseService = {
         type: input.type,
         amount: input.amount,
         notes: input.notes ?? null,
-        ...(input.date ? { date: input.date } : {}),
+        date: input.date,
       },
     });
   },

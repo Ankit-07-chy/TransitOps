@@ -46,7 +46,7 @@ export const FuelService = {
         tripId: input.tripId ?? null,
         liters: input.liters,
         cost: input.cost,
-        ...(input.date ? { date: input.date } : {}),
+        date: input.date,
       },
       include: { trip: { select: { id: true, tripNumber: true } } },
     });
