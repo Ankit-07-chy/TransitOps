@@ -67,14 +67,19 @@ export function ReportsPage() {
         subtitle="Fuel efficiency, fleet utilization, operational cost, and ROI"
         actions={
           canExport && (
-            <Button variant="outline" onClick={exportCsv} disabled={!data}>
-              <Download /> Export CSV
-            </Button>
+            <div className="flex gap-2 print:hidden">
+              <Button variant="outline" onClick={exportCsv} disabled={!data}>
+                <Download className="size-4" /> Export CSV
+              </Button>
+              <Button variant="outline" onClick={() => window.print()} disabled={!data}>
+                <Download className="size-4" /> Download PDF
+              </Button>
+            </div>
           )
         }
       />
 
-      <Card className="mb-6 p-4">
+      <Card className="mb-6 p-4 print:hidden">
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-1.5">
             <Label>From</Label>

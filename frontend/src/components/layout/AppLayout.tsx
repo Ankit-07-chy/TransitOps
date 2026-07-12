@@ -23,7 +23,7 @@ export function AppLayout() {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r bg-card lg:block">
+      <aside className="hidden w-64 shrink-0 border-r bg-card lg:block print:hidden">
         <div className="sticky top-0 h-screen">
           <Sidebar />
         </div>
@@ -40,7 +40,7 @@ export function AppLayout() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-card/80 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-card/80 px-4 backdrop-blur sm:px-6 print:hidden">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -74,7 +74,7 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6">
+        <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 print:p-0 print:max-w-none">
           <Outlet />
         </main>
       </div>
