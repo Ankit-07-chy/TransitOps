@@ -7,7 +7,7 @@ import { Role } from './types';
 export const can = {
   manageVehicles: (role?: Role) => role === 'FLEET_MANAGER',
   manageDrivers: (role?: Role) => role === 'SAFETY_OFFICER' || role === 'FLEET_MANAGER',
-  operateTrips: (role?: Role) => role === 'FLEET_MANAGER',
+  operateTrips: (role?: Role) => role === 'FLEET_MANAGER' || role === 'DRIVER',
   manageMaintenance: (role?: Role) => role === 'FLEET_MANAGER',
   logFuel: (role?: Role) =>
     role === 'DRIVER' || role === 'FINANCIAL_ANALYST' || role === 'FLEET_MANAGER',

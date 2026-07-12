@@ -111,8 +111,18 @@ export const ExpenseController = {
 };
 
 export const DashboardController = {
+  /** Each role gets its own dashboard payload, discriminated by `role`. */
   async get(req: Request, res: Response) {
-    res.json(await DashboardService.get(getQuery(req)));
+    switch (req.user!.role) {
+      case 'DRIVER':
+        return res.json(await DashboardService.getForDriver(req.user!.driverId));
+      case 'SAFETY_OFFICER':
+        return res.json(await DashboardService.getForSafetyOfficer());
+      case 'FINANCIAL_ANALYST':
+        return res.json(await DashboardService.getForFinancialAnalyst());
+      default:
+        return res.json({ role: 'FLEET_MANAGER', ...(await DashboardService.get(getQuery(req))) });
+    }
   },
 };
 

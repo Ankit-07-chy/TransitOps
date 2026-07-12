@@ -43,9 +43,9 @@ export const TripService = {
     });
   },
 
-  async listActive() {
+  async listActive(driverId?: string) {
     return prisma.trip.findMany({
-      where: { status: 'DISPATCHED' },
+      where: { status: 'DISPATCHED', ...(driverId ? { driverId } : {}) },
       include: tripInclude,
       orderBy: { dispatchedAt: 'desc' },
     });

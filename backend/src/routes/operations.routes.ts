@@ -88,8 +88,13 @@ router.get(
   asyncHandler(DashboardController.get),
 );
 
-/* ---------- Reports (view for all; CSV export for Financial + Fleet Manager) ---------- */
-router.get('/reports', validate({ query: reportQuerySchema }), asyncHandler(ReportController.get));
+/* ---------- Reports (no Driver access per spec; CSV export for Financial + Fleet Manager) ---------- */
+router.get(
+  '/reports',
+  requireRole('FLEET_MANAGER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'),
+  validate({ query: reportQuerySchema }),
+  asyncHandler(ReportController.get),
+);
 router.get(
   '/reports/export.csv',
   requireRole('FINANCIAL_ANALYST', 'FLEET_MANAGER'),

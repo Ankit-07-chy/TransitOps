@@ -13,6 +13,7 @@ async function main() {
   console.log('🌱 Seeding TransitOps database...');
 
   // Clean slate (children first for FK safety).
+  await prisma.tripSafetyReview.deleteMany();
   await prisma.fuelLog.deleteMany();
   await prisma.expense.deleteMany();
   await prisma.maintenanceLog.deleteMany();

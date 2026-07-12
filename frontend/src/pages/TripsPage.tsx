@@ -32,6 +32,7 @@ export function TripsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const canOperate = can.operateTrips(user?.role);
+  const isDriver = user?.role === 'DRIVER';
 
   const [status, setStatus] = useState('');
   const { data, loading, error, refetch } = useApi<Trip[]>(
@@ -87,9 +88,10 @@ export function TripsPage() {
     if (!createOpen) return;
     void (async () => {
       try {
+        // Drivers can only create trips for themselves — no driver picker needed.
         const [v, d] = await Promise.all([
           api.get<Vehicle[]>('/vehicles/available'),
-          api.get<Driver[]>('/drivers/available'),
+          isDriver ? Promise.resolve<Driver[]>([]) : api.get<Driver[]>('/drivers/available'),
         ]);
         setAvailVehicles(v);
         setAvailDrivers(d);
@@ -97,7 +99,7 @@ export function TripsPage() {
         toast('Failed to load available vehicles/drivers', 'error');
       }
     })();
-  }, [createOpen, toast]);
+  }, [createOpen, isDriver, toast]);
 
   const selectedVehicle = availVehicles.find((v) => v.id === form.vehicleId);
 
@@ -109,7 +111,7 @@ export function TripsPage() {
         source: form.source,
         destination: form.destination,
         vehicleId: form.vehicleId,
-        driverId: form.driverId,
+        driverId: isDriver ? user?.driverId : form.driverId,
         cargoWeight: Number(form.cargoWeight),
         plannedDistance: Number(form.plannedDistance),
         revenue: form.revenue ? Number(form.revenue) : 0,
@@ -361,18 +363,22 @@ export function TripsPage() {
               </Select>
             </Field>
             <Field label="Driver">
-              <Select
-                value={form.driverId}
-                onChange={(e) => setForm({ ...form, driverId: e.target.value })}
-                required
-              >
-                <option value="">Select driver…</option>
-                {availDrivers.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} — {d.licenseNumber}
-                  </option>
-                ))}
-              </Select>
+              {isDriver ? (
+                <Input value={`${user?.name ?? 'You'} (assigned to you)`} disabled />
+              ) : (
+                <Select
+                  value={form.driverId}
+                  onChange={(e) => setForm({ ...form, driverId: e.target.value })}
+                  required
+                >
+                  <option value="">Select driver…</option>
+                  {availDrivers.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} — {d.licenseNumber}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </Field>
             <Field label="Cargo Weight (kg)">
               <Input

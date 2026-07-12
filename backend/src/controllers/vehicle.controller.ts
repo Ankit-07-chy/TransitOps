@@ -4,7 +4,10 @@ import { getQuery } from '../middleware/validate';
 
 export const VehicleController = {
   async list(req: Request, res: Response) {
-    const vehicles = await VehicleService.list(getQuery(req));
+    const filters = getQuery<Parameters<typeof VehicleService.list>[0]>(req);
+    // Spec §4: drivers only view the available pool.
+    if (req.user!.role === 'DRIVER') filters.status = 'AVAILABLE';
+    const vehicles = await VehicleService.list(filters);
     res.json(vehicles);
   },
   async available(_req: Request, res: Response) {

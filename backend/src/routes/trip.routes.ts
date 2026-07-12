@@ -30,8 +30,9 @@ router.post(
   asyncHandler(TripController.review),
 );
 
-// Lifecycle — Fleet Manager and Driver.
-const canOperateTrips = requireRole('FLEET_MANAGER');
+// Lifecycle — Fleet Manager and Driver (drivers are scoped to their own trips
+// in the controller).
+const canOperateTrips = requireRole('FLEET_MANAGER', 'DRIVER');
 
 router.post(
   '/',
