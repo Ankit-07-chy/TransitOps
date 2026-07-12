@@ -18,24 +18,30 @@ router.get('/', validate({ query: driverQuerySchema }), asyncHandler(DriverContr
 router.get('/available', asyncHandler(DriverController.available));
 router.get('/:id', validate({ params: idParamSchema }), asyncHandler(DriverController.getById));
 
-// Full CRUD (license, safety score, status) — Safety Officer only.
+// Full CRUD (license, safety score, status) — Safety Officer & Fleet Manager.
 router.post(
   '/',
-  requireRole('SAFETY_OFFICER'),
+  requireRole('SAFETY_OFFICER', 'FLEET_MANAGER'),
   validate({ body: createDriverSchema }),
   asyncHandler(DriverController.create),
 );
 router.patch(
   '/:id',
-  requireRole('SAFETY_OFFICER'),
+  requireRole('SAFETY_OFFICER', 'FLEET_MANAGER'),
   validate({ params: idParamSchema, body: updateDriverSchema }),
   asyncHandler(DriverController.update),
 );
 router.patch(
   '/:id/suspend',
-  requireRole('SAFETY_OFFICER'),
+  requireRole('SAFETY_OFFICER', 'FLEET_MANAGER'),
   validate({ params: idParamSchema }),
   asyncHandler(DriverController.suspend),
+);
+router.delete(
+  '/:id',
+  requireRole('SAFETY_OFFICER', 'FLEET_MANAGER'),
+  validate({ params: idParamSchema }),
+  asyncHandler(DriverController.delete),
 );
 
 export default router;

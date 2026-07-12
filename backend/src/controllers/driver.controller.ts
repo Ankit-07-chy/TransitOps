@@ -21,4 +21,8 @@ export const DriverController = {
   async suspend(req: Request, res: Response) {
     res.json(await DriverService.suspend(req.params.id));
   },
+  async delete(req: Request, res: Response) {
+    await DriverService.delete(req.params.id);
+    res.status(204).end();
+  },
 };

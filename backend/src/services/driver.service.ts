@@ -81,4 +81,29 @@ export const DriverService = {
     }
     return prisma.driver.update({ where: { id }, data: { status: 'SUSPENDED' } });
   },
+
+  /** Soft-delete a driver (sets isActive: false) and deactivates any associated user account. */
+  async delete(id: string) {
+    const driver = await this.getById(id);
+    if (driver.status === 'ON_TRIP') {
+      throw AppError.unprocessable(
+        'Cannot delete a driver who is currently on a trip. Complete or cancel the trip first.',
+      );
+    }
+    return prisma.$transaction(async (tx) => {
+      // Soft-delete the driver record
+      const deletedDriver = await tx.driver.update({
+        where: { id },
+        data: { isActive: false },
+      });
+
+      // Soft-delete linked User account if one exists
+      await tx.user.updateMany({
+        where: { driverId: id, isActive: true },
+        data: { isActive: false },
+      });
+
+      return deletedDriver;
+    });
+  },
 };

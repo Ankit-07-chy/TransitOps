@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { AlertTriangle, Ban, Pencil, Plus, Search, Users } from 'lucide-react';
+import { AlertTriangle, Ban, Pencil, Plus, Search, Trash2, Users } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { DriverStatusBadge } from '@/components/shared/StatusBadge';
@@ -77,6 +77,7 @@ export function DriversPage() {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [suspendTarget, setSuspendTarget] = useState<Driver | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Driver | null>(null);
 
   const openCreate = () => {
     setEditing(null);
@@ -136,6 +137,19 @@ export function DriversPage() {
       refetch();
     } catch (err) {
       toast(err instanceof ApiError ? err.message : 'Suspend failed', 'error');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await api.del(`/drivers/${deleteTarget.id}`);
+      toast('Driver deleted');
+      refetch();
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : 'Delete failed', 'error');
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -237,6 +251,15 @@ export function DriversPage() {
                           >
                             <Ban />
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={d.status === 'ON_TRIP'}
+                            onClick={() => setDeleteTarget(d)}
+                            title="Delete driver"
+                          >
+                            <Trash2 className="text-destructive size-4" />
+                          </Button>
                         </div>
                       </TD>
                     )}
@@ -330,6 +353,16 @@ export function DriversPage() {
         title="Suspend driver?"
         message={`${suspendTarget?.name} will be suspended and cannot be assigned to trips until reinstated.`}
         confirmLabel="Suspend"
+        destructive
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete driver?"
+        message={`${deleteTarget?.name} will be soft-deleted. Their driver profile and any associated user login credentials will be deactivated.`}
+        confirmLabel="Delete"
         destructive
       />
     </div>
