@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/components/ui/toast';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
+import { RequireModule } from '@/components/layout/RequireModule';
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { VehiclesPage } from '@/pages/VehiclesPage';
@@ -29,12 +30,54 @@ export default function App() {
                 }
               >
                 <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/vehicles" element={<VehiclesPage />} />
-                <Route path="/drivers" element={<DriversPage />} />
-                <Route path="/trips" element={<TripsPage />} />
-                <Route path="/maintenance" element={<MaintenancePage />} />
-                <Route path="/fuel-expenses" element={<FuelExpensesPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
+                <Route
+                  path="/vehicles"
+                  element={
+                    <RequireModule module="vehicles">
+                      <VehiclesPage />
+                    </RequireModule>
+                  }
+                />
+                <Route
+                  path="/drivers"
+                  element={
+                    <RequireModule module="drivers">
+                      <DriversPage />
+                    </RequireModule>
+                  }
+                />
+                <Route
+                  path="/trips"
+                  element={
+                    <RequireModule module="trips">
+                      <TripsPage />
+                    </RequireModule>
+                  }
+                />
+                <Route
+                  path="/maintenance"
+                  element={
+                    <RequireModule module="maintenance">
+                      <MaintenancePage />
+                    </RequireModule>
+                  }
+                />
+                <Route
+                  path="/fuel-expenses"
+                  element={
+                    <RequireModule module="fuel-expenses">
+                      <FuelExpensesPage />
+                    </RequireModule>
+                  }
+                />
+                <Route
+                  path="/reports"
+                  element={
+                    <RequireModule module="reports">
+                      <ReportsPage />
+                    </RequireModule>
+                  }
+                />
               </Route>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
