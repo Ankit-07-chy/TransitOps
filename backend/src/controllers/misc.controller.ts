@@ -57,11 +57,10 @@ export const FuelController = {
   },
   async listAll(req: Request, res: Response) {
     if (req.user!.role === 'DRIVER') {
-      const assigned = await DriverService.getAssignedVehicleId(req.user!.driverId);
-      if (!assigned) {
+      if (!req.user!.driverId) {
         return res.json([]);
       }
-      res.json(await FuelService.listForVehicle(assigned));
+      res.json(await FuelService.listForDriver(req.user!.driverId));
     } else {
       res.json(await FuelService.listAll());
     }
