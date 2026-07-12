@@ -19,18 +19,21 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { KpiCard } from '@/components/shared/KpiCard';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { DetailDialog, DetailColumn } from '@/components/shared/DetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/spinner';
-import { ExpenseTypeBadge } from '@/components/shared/StatusBadge';
+import { ExpenseTypeBadge, TripStatusBadge } from '@/components/shared/StatusBadge';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
-import { FinanceDashboardData } from '@/lib/types';
-import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { Expense, FinanceDashboardData, FuelLog, MaintenanceLog, Trip } from '@/lib/types';
+import { formatCurrency, formatDateTime, formatNumber, isThisMonth } from '@/lib/utils';
 
 const EXPENSE_COLORS: Record<string, string> = {
   TOLL: '#0ea5e9',
@@ -38,8 +41,182 @@ const EXPENSE_COLORS: Record<string, string> = {
   OTHER: '#8b5cf6',
 };
 
+type FinanceModalKey =
+  | 'TODAY'
+  | 'MONTH_EXPENSES'
+  | 'FUEL'
+  | 'MAINTENANCE'
+  | 'OP_COST'
+  | 'REVENUE';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const expenseColumns: DetailColumn<any>[] = [
+  { header: 'Type', render: (e: Expense) => <ExpenseTypeBadge type={e.type} /> },
+  {
+    header: 'Amount',
+    render: (e: Expense) => <span className="font-semibold">{formatCurrency(e.amount)}</span>,
+  },
+  { header: 'Vehicle', render: (e: Expense) => e.vehicle?.registrationNo ?? '—' },
+  { header: 'Driver', render: (e: Expense) => e.driver?.name ?? '—' },
+  {
+    header: 'Notes',
+    render: (e: Expense) => <span className="text-muted-foreground">{e.notes || '—'}</span>,
+  },
+  {
+    header: 'Date',
+    render: (e: Expense) => <span className="text-muted-foreground">{formatDateTime(e.date)}</span>,
+  },
+];
+
 export function FinancialAnalystDashboard() {
   const { data, loading, error } = useApi<FinanceDashboardData>(() => api.get('/dashboard'), []);
+
+  const [activeModal, setActiveModal] = useState<FinanceModalKey | null>(null);
+  const [rows, setRows] = useState<any[]>([]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+
+  const modals: Record<
+    FinanceModalKey,
+    { title: string; load: () => Promise<any[]>; columns: DetailColumn<any>[] }
+  > = {
+    TODAY: {
+      title: "Today's Expenses",
+      load: () => api.get<Expense[]>('/expenses', { date: 'today' }),
+      columns: expenseColumns,
+    },
+    MONTH_EXPENSES: {
+      title: 'Expenses This Month',
+      load: async () => (await api.get<Expense[]>('/expenses')).filter((e) => isThisMonth(e.date)),
+      columns: expenseColumns,
+    },
+    FUEL: {
+      title: 'Fuel Logs This Month',
+      load: async () => (await api.get<FuelLog[]>('/fuel-logs')).filter((f) => isThisMonth(f.date)),
+      columns: [
+        { header: 'Vehicle', render: (f: FuelLog) => f.vehicle?.registrationNo ?? '—' },
+        { header: 'Trip', render: (f: FuelLog) => f.trip?.tripNumber ?? '—' },
+        { header: 'Driver', render: (f: FuelLog) => f.trip?.driver?.name ?? '—' },
+        { header: 'Liters', render: (f: FuelLog) => `${formatNumber(f.liters, 1)} L` },
+        {
+          header: 'Cost',
+          render: (f: FuelLog) => <span className="font-semibold">{formatCurrency(f.cost)}</span>,
+        },
+        {
+          header: 'Date',
+          render: (f: FuelLog) => (
+            <span className="text-muted-foreground">{formatDateTime(f.date)}</span>
+          ),
+        },
+      ],
+    },
+    MAINTENANCE: {
+      title: 'Maintenance This Month',
+      load: async () =>
+        (await api.get<MaintenanceLog[]>('/maintenance')).filter((m) => isThisMonth(m.openedAt)),
+      columns: [
+        {
+          header: 'Vehicle',
+          render: (m: MaintenanceLog) => (
+            <span className="font-medium">
+              {m.vehicle?.name} ({m.vehicle?.registrationNo})
+            </span>
+          ),
+        },
+        { header: 'Description', render: (m: MaintenanceLog) => m.description },
+        {
+          header: 'Cost',
+          render: (m: MaintenanceLog) => (
+            <span className="font-semibold">{formatCurrency(m.cost)}</span>
+          ),
+        },
+        {
+          header: 'Status',
+          render: (m: MaintenanceLog) => (
+            <Badge tone={m.isActive ? 'warning' : 'success'}>
+              {m.isActive ? 'Open' : 'Closed'}
+            </Badge>
+          ),
+        },
+        {
+          header: 'Opened',
+          render: (m: MaintenanceLog) => (
+            <span className="text-muted-foreground">{formatDateTime(m.openedAt)}</span>
+          ),
+        },
+      ],
+    },
+    OP_COST: {
+      title: 'Operational Cost per Vehicle (Month)',
+      load: () => Promise.resolve(data?.costPerVehicle ?? []),
+      columns: [
+        {
+          header: 'Vehicle',
+          render: (v) => (
+            <span className="font-medium">
+              {v.name} ({v.registrationNo})
+            </span>
+          ),
+        },
+        { header: 'Fuel', render: (v) => formatCurrency(v.fuelCost) },
+        { header: 'Maintenance', render: (v) => formatCurrency(v.maintenanceCost) },
+        { header: 'Expenses', render: (v) => formatCurrency(v.expenseCost) },
+        {
+          header: 'Total',
+          render: (v) => <span className="font-semibold">{formatCurrency(v.total)}</span>,
+        },
+      ],
+    },
+    REVENUE: {
+      title: 'Revenue This Month (completed trips)',
+      load: async () =>
+        (await api.get<Trip[]>('/trips', { status: 'COMPLETED' })).filter((t) =>
+          isThisMonth(t.completedAt),
+        ),
+      columns: [
+        {
+          header: 'Trip #',
+          render: (t: Trip) => <span className="font-medium">{t.tripNumber}</span>,
+        },
+        {
+          header: 'Route',
+          render: (t: Trip) => (
+            <span className="text-muted-foreground">
+              {t.source} → {t.destination}
+            </span>
+          ),
+        },
+        { header: 'Driver', render: (t: Trip) => t.driver?.name ?? '—' },
+        {
+          header: 'Revenue',
+          render: (t: Trip) => <span className="font-semibold">{formatCurrency(t.revenue)}</span>,
+        },
+        { header: 'Status', render: (t: Trip) => <TripStatusBadge status={t.status} /> },
+        {
+          header: 'Completed',
+          render: (t: Trip) => (
+            <span className="text-muted-foreground">{formatDateTime(t.completedAt)}</span>
+          ),
+        },
+      ],
+    },
+  };
+
+  useEffect(() => {
+    if (!activeModal) {
+      setRows([]);
+      setModalError(null);
+      return;
+    }
+    setModalLoading(true);
+    setModalError(null);
+    modals[activeModal]
+      .load()
+      .then(setRows)
+      .catch((e) => setModalError(e instanceof ApiError ? e.message : 'Failed to load details'))
+      .finally(() => setModalLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeModal]);
 
   const pieData = data
     ? Object.entries(data.monthExpenseBreakdown)

@@ -383,6 +383,16 @@ export function SafetyOfficerDashboard() {
           </div>
         </div>
       )}
+
+      <DetailDialog
+        open={!!activeModal}
+        onClose={() => setActiveModal(null)}
+        title={activeModal ? modals[activeModal].title : ''}
+        loading={modalLoading}
+        error={modalError}
+        rows={rows}
+        columns={activeModal ? modals[activeModal].columns : []}
+      />
     </div>
   );
 }
