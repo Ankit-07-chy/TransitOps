@@ -31,7 +31,7 @@ router.post(
 );
 
 // Lifecycle — Fleet Manager and Driver.
-const canOperateTrips = requireRole('FLEET_MANAGER', 'DRIVER');
+const canOperateTrips = requireRole('FLEET_MANAGER');
 
 router.post(
   '/',
