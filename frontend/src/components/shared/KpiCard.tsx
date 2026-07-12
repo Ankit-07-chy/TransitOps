@@ -8,12 +8,14 @@ export function KpiCard({
   icon: Icon,
   hint,
   accent = 'primary',
+  onClick,
 }: {
   label: string;
   value: string | number;
   icon: LucideIcon;
   hint?: string;
   accent?: 'primary' | 'success' | 'warning' | 'info' | 'danger';
+  onClick?: () => void;
 }) {
   const accents: Record<string, string> = {
     primary: 'bg-primary/10 text-primary',
@@ -23,7 +25,19 @@ export function KpiCard({
     danger: 'bg-red-500/15 text-red-600 dark:text-red-400',
   };
   return (
-    <Card className="p-5">
+    <Card
+      className={cn(
+        "p-5 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.03] hover:shadow-md hover:border-primary/50 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 outline-none"
+      )}
+      onClick={onClick}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
         <div className={cn('flex size-9 items-center justify-center rounded-lg', accents[accent])}>

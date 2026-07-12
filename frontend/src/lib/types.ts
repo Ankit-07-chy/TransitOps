@@ -112,6 +112,7 @@ export interface DashboardData {
     pendingTrips: number;
     driversOnDuty: number;
     fleetUtilizationPct: number;
+    todaysFuelLiters: number;
   };
   recentTrips: Array<
     Pick<Trip, 'id' | 'tripNumber' | 'source' | 'destination' | 'status' | 'createdAt'> & {

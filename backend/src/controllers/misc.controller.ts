@@ -26,6 +26,9 @@ export const FuelController = {
   async listForVehicle(req: Request, res: Response) {
     res.json(await FuelService.listForVehicle(req.params.vehicleId));
   },
+  async listAll(req: Request, res: Response) {
+    res.json(await FuelService.listAll());
+  },
   async create(req: Request, res: Response) {
     res.status(201).json(await FuelService.create(req.body));
   },
@@ -34,6 +37,9 @@ export const FuelController = {
 export const ExpenseController = {
   async listForVehicle(req: Request, res: Response) {
     res.json(await ExpenseService.listForVehicle(req.params.vehicleId));
+  },
+  async listAll(req: Request, res: Response) {
+    res.json(await ExpenseService.listAll(getQuery(req)));
   },
   async create(req: Request, res: Response) {
     res.status(201).json(await ExpenseService.create(req.body));

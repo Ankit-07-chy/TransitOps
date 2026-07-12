@@ -10,6 +10,21 @@ export const ExpenseService = {
     });
   },
 
+  async listAll(filters: { date?: string }) {
+    const where: any = {};
+    if (filters.date === 'today') {
+      const { startOfToday } = require('./eligibility');
+      where.date = { gte: startOfToday() };
+    }
+    return prisma.expense.findMany({
+      where,
+      include: {
+        vehicle: { select: { id: true, name: true, registrationNo: true } },
+      },
+      orderBy: { date: 'desc' },
+    });
+  },
+
   /** Log an expense by ExpenseType. amount validated >= 0 (rule 21). */
   async create(input: CreateExpenseInput) {
     const vehicle = await prisma.vehicle.findUnique({ where: { id: input.vehicleId } });

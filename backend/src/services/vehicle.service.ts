@@ -25,7 +25,20 @@ export const VehicleService = {
         { registrationNo: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
-    return prisma.vehicle.findMany({ where, orderBy: { createdAt: 'desc' } });
+    return prisma.vehicle.findMany({
+      where,
+      include: {
+        trips: {
+          where: { status: 'DISPATCHED' },
+          include: { driver: true },
+        },
+        maintenanceLogs: {
+          orderBy: { openedAt: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   },
 
   async getById(id: string) {

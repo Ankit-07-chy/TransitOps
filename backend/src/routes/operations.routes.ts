@@ -49,6 +49,10 @@ router.patch(
 
 /* ---------- Fuel logs (Driver logs fuel; Financial full; others view) ---------- */
 router.get(
+  '/fuel-logs',
+  asyncHandler(FuelController.listAll),
+);
+router.get(
   '/fuel-logs/:vehicleId',
   validate({ params: vehicleIdParamSchema }),
   asyncHandler(FuelController.listForVehicle),
@@ -61,6 +65,10 @@ router.post(
 );
 
 /* ---------- Expenses (Financial full CRUD; others view) ---------- */
+router.get(
+  '/expenses',
+  asyncHandler(ExpenseController.listAll),
+);
 router.get(
   '/expenses/:vehicleId',
   validate({ params: vehicleIdParamSchema }),

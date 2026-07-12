@@ -24,7 +24,16 @@ export const DriverService = {
         { licenseNumber: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
-    return prisma.driver.findMany({ where, orderBy: { createdAt: 'desc' } });
+    return prisma.driver.findMany({
+      where,
+      include: {
+        trips: {
+          where: { status: 'DISPATCHED' },
+          include: { vehicle: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   },
 
   async getById(id: string) {

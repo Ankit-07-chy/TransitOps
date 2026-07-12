@@ -41,6 +41,7 @@ export const DashboardService = {
       maintenanceLogs,
       expiringLicenses,
       todaysExpenses,
+      todaysFuel,
     ] = await Promise.all([
       // KPIs
       prisma.vehicle.count({ where: activeFleetWhere }),
@@ -81,8 +82,12 @@ export const DashboardService = {
       }),
       prisma.expense.groupBy({
         by: ['type'],
-        where: { date: { gte: startOfToday() } },
+        where: { date: { gte: startOfToday() }, ...(Object.keys(vehicleWhere).length ? { vehicle: vehicleWhere } : {}) },
         _sum: { amount: true },
+      }),
+      prisma.fuelLog.aggregate({
+        where: { date: { gte: startOfToday() }, ...(Object.keys(vehicleWhere).length ? { vehicle: vehicleWhere } : {}) },
+        _sum: { liters: true },
       }),
     ]);
 
@@ -114,6 +119,7 @@ export const DashboardService = {
         pendingTrips,
         driversOnDuty,
         fleetUtilizationPct,
+        todaysFuelLiters: todaysFuel._sum.liters ?? 0,
       },
       recentTrips,
       vehiclesInMaintenance: maintenanceLogs,

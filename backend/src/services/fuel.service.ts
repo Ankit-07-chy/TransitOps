@@ -11,6 +11,22 @@ export const FuelService = {
     });
   },
 
+  async listAll() {
+    return prisma.fuelLog.findMany({
+      include: {
+        vehicle: { select: { id: true, name: true, registrationNo: true } },
+        trip: {
+          select: {
+            id: true,
+            tripNumber: true,
+            driver: { select: { id: true, name: true } },
+          },
+        },
+      },
+      orderBy: { date: 'desc' },
+    });
+  },
+
   /** Log fuel, optionally linked to a trip. liters & cost validated >= 0 (rule 21). */
   async create(input: CreateFuelLogInput) {
     const vehicle = await prisma.vehicle.findUnique({ where: { id: input.vehicleId } });
