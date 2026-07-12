@@ -6,6 +6,10 @@ export const ExpenseService = {
   async listForVehicle(vehicleId: string) {
     return prisma.expense.findMany({
       where: { vehicleId },
+      include: {
+        vehicle: { select: { id: true, name: true, registrationNo: true } },
+        driver: { select: { id: true, name: true } },
+      },
       orderBy: { date: 'desc' },
     });
   },
@@ -20,6 +24,7 @@ export const ExpenseService = {
       where,
       include: {
         vehicle: { select: { id: true, name: true, registrationNo: true } },
+        driver: { select: { id: true, name: true } },
       },
       orderBy: { date: 'desc' },
     });
@@ -33,6 +38,7 @@ export const ExpenseService = {
     return prisma.expense.create({
       data: {
         vehicleId: input.vehicleId,
+        driverId: input.driverId ?? null,
         type: input.type,
         amount: input.amount,
         notes: input.notes ?? null,

@@ -47,12 +47,32 @@ export const MaintenanceController = {
 
 export const FuelController = {
   async listForVehicle(req: Request, res: Response) {
+    if (req.user!.role === 'DRIVER') {
+      const assigned = await DriverService.getAssignedVehicleId(req.user!.driverId);
+      if (!assigned || assigned !== req.params.vehicleId) {
+        throw AppError.forbidden('You are only authorized to view fuel logs for your assigned vehicle.');
+      }
+    }
     res.json(await FuelService.listForVehicle(req.params.vehicleId));
   },
   async listAll(req: Request, res: Response) {
-    res.json(await FuelService.listAll());
+    if (req.user!.role === 'DRIVER') {
+      const assigned = await DriverService.getAssignedVehicleId(req.user!.driverId);
+      if (!assigned) {
+        return res.json([]);
+      }
+      res.json(await FuelService.listForVehicle(assigned));
+    } else {
+      res.json(await FuelService.listAll());
+    }
   },
   async create(req: Request, res: Response) {
+    if (req.user!.role === 'DRIVER') {
+      const assigned = await DriverService.getAssignedVehicleId(req.user!.driverId);
+      if (!assigned || assigned !== req.body.vehicleId) {
+        throw AppError.forbidden('You are only authorized to log fuel for your assigned vehicle.');
+      }
+    }
     res.status(201).json(await FuelService.create(req.body));
   },
 };
@@ -84,6 +104,7 @@ export const ExpenseController = {
       if (!assigned || assigned !== req.body.vehicleId) {
         throw AppError.forbidden('You are only authorized to record expenses for your assigned vehicle.');
       }
+      req.body.driverId = req.user!.driverId;
     }
     res.status(201).json(await ExpenseService.create(req.body));
   },

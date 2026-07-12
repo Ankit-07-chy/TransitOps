@@ -96,6 +96,7 @@ model Driver {
   trips             Trip[]
   userAccount       User?
   safetyReviews     TripSafetyReview[]
+  expenses          Expense[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
@@ -163,12 +164,15 @@ model Expense {
   id        String      @id @default(uuid())
   vehicleId String
   vehicle   Vehicle     @relation(fields: [vehicleId], references: [id])
+  driverId  String?
+  driver    Driver?     @relation(fields: [driverId], references: [id])
   type      ExpenseType
   amount    Float
   date      DateTime    @default(now())
   notes     String?
 
   @@index([vehicleId])
+  @@index([driverId])
   @@index([type])
 }
 

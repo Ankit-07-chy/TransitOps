@@ -131,6 +131,7 @@ export const createFuelLogSchema = z.object({
 /* ---------- expense ---------- */
 export const createExpenseSchema = z.object({
   vehicleId: z.string().uuid('Valid vehicle required'),
+  driverId: z.string().uuid().optional(),
   type: z.enum(['TOLL', 'MAINTENANCE', 'OTHER']),
   amount: nonNegative,
   date: z.coerce.date().optional(),

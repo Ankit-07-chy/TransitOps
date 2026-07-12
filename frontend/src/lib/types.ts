@@ -39,6 +39,7 @@ export interface Driver {
   safetyScore: number;
   status: DriverStatus;
   isActive: boolean;
+  trips?: (Trip & { vehicle: Vehicle })[];
   createdAt: string;
   updatedAt: string;
 }
@@ -99,8 +100,9 @@ export interface MaintenanceLog {
 export interface FuelLog {
   id: string;
   vehicleId: string;
+  vehicle?: { id: string; name: string; registrationNo: string };
   tripId: string | null;
-  trip: { id: string; tripNumber: string } | null;
+  trip: { id: string; tripNumber: string; driver?: { id: string; name: string } } | null;
   liters: number;
   cost: number;
   date: string;
@@ -109,6 +111,9 @@ export interface FuelLog {
 export interface Expense {
   id: string;
   vehicleId: string;
+  vehicle?: { id: string; name: string; registrationNo: string };
+  driverId?: string | null;
+  driver?: { id: string; name: string } | null;
   type: ExpenseType;
   amount: number;
   date: string;
