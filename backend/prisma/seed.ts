@@ -115,6 +115,47 @@ async function main() {
     },
   });
 
+  // User accounts for the other drivers to make them "registered"
+  await prisma.user.create({
+    data: {
+      name: 'Bella Chen',
+      email: 'bella.chen@nayatransit.com',
+      passwordHash,
+      role: 'DRIVER',
+      driverId: bella.id,
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: 'Carlos Diaz',
+      email: 'carlos.diaz@nayatransit.com',
+      passwordHash,
+      role: 'DRIVER',
+      driverId: carlos.id,
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: 'Dana White',
+      email: 'dana.white@nayatransit.com',
+      passwordHash,
+      role: 'DRIVER',
+      driverId: dana.id,
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: 'Evan Reed',
+      email: 'evan.reed@nayatransit.com',
+      passwordHash,
+      role: 'DRIVER',
+      driverId: evan.id,
+    },
+  });
+
   /* ---------- Vehicles ---------- */
   const van05 = await prisma.vehicle.create({
     data: {

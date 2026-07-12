@@ -1,4 +1,4 @@
-import { Driver, Vehicle } from '@prisma/client';
+import { Driver, Vehicle, User } from '@prisma/client';
 import { AppError } from '../utils/AppError';
 
 /**
@@ -48,11 +48,18 @@ export function assertVehicleEligibleForDispatch(vehicle: Vehicle): void {
 
 /**
  * Rules 6–9: A driver is dispatch-eligible only if active, license not expired,
- * and not SUSPENDED / OFF_DUTY / ON_TRIP.
+ * registered user account linked, and not SUSPENDED / OFF_DUTY / ON_TRIP.
  */
-export function assertDriverEligibleForDispatch(driver: Driver): void {
+export function assertDriverEligibleForDispatch(
+  driver: Driver & { userAccount?: User | null },
+): void {
   if (!driver.isActive) {
     throw AppError.unprocessable(`Driver ${driver.name} is deactivated and cannot be assigned.`);
+  }
+  if (!driver.userAccount) {
+    throw AppError.unprocessable(
+      `Driver ${driver.name} is not registered with a user account and cannot be assigned.`,
+    );
   }
   if (driver.licenseExpiryDate < startOfToday()) {
     throw AppError.unprocessable(

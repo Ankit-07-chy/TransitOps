@@ -53,6 +53,7 @@ export const DriverService = {
         isActive: true,
         status: 'AVAILABLE',
         licenseExpiryDate: { gte: startOfToday() },
+        userAccount: { isNot: null },
       },
       orderBy: { name: 'asc' },
     });

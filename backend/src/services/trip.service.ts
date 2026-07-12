@@ -66,7 +66,10 @@ export const TripService = {
     return prisma.$transaction(async (tx) => {
       const vehicle = await tx.vehicle.findUnique({ where: { id: input.vehicleId } });
       if (!vehicle) throw AppError.notFound('Selected vehicle not found');
-      const driver = await tx.driver.findUnique({ where: { id: input.driverId } });
+      const driver = await tx.driver.findUnique({
+        where: { id: input.driverId },
+        include: { userAccount: true },
+      });
       if (!driver) throw AppError.notFound('Selected driver not found');
 
       assertTripPayloadValid({
@@ -112,7 +115,10 @@ export const TripService = {
       }
 
       const vehicle = await tx.vehicle.findUnique({ where: { id: trip.vehicleId } });
-      const driver = await tx.driver.findUnique({ where: { id: trip.driverId } });
+      const driver = await tx.driver.findUnique({
+        where: { id: trip.driverId },
+        include: { userAccount: true },
+      });
       if (!vehicle || !driver) throw AppError.notFound('Trip vehicle or driver missing');
 
       assertVehicleEligibleForDispatch(vehicle);
