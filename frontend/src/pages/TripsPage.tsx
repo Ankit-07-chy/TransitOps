@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { CheckCircle2, Plus, Route as RouteIcon, Send, XCircle } from 'lucide-react';
+import { CheckCircle2, Plus, Route as RouteIcon, Send, Star, XCircle } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { TripStatusBadge } from '@/components/shared/StatusBadge';
@@ -50,6 +50,38 @@ export function TripsPage() {
   const [confirm, setConfirm] = useState<{ trip: Trip; action: 'dispatch' | 'cancel' } | null>(
     null,
   );
+
+  const isSafetyOfficer = user?.role === 'SAFETY_OFFICER';
+  const { data: pendingReviews, loading: pendingLoading, error: pendingError, refetch: refetchPending } = useApi<Trip[]>(
+    () => (isSafetyOfficer ? api.get('/trips/pending-safety-review') : Promise.resolve([])),
+    [user],
+  );
+
+  const [reviewTrip, setReviewTrip] = useState<Trip | null>(null);
+  const [rating, setRating] = useState(0);
+  const [remarks, setRemarks] = useState('');
+
+  const submitReview = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!reviewTrip || rating === 0) return;
+    setSaving(true);
+    try {
+      await api.post(`/trips/${reviewTrip.id}/review`, {
+        rating,
+        remarks: remarks.trim() || undefined,
+      });
+      toast('Trip safety review submitted');
+      setReviewTrip(null);
+      setRating(0);
+      setRemarks('');
+      refetchPending();
+      refetch();
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : 'Submit review failed', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!createOpen) return;
@@ -137,6 +169,75 @@ export function TripsPage() {
           )
         }
       />
+
+      {isSafetyOfficer && (
+        <Card className="mb-6 p-4">
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <RouteIcon className="text-primary size-5" />
+            Pending Safety Reviews
+          </h2>
+          {pendingLoading ? (
+            <LoadingState />
+          ) : pendingError ? (
+            <p className="text-sm text-destructive">{pendingError}</p>
+          ) : !pendingReviews || pendingReviews.length === 0 ? (
+            <EmptyState icon={RouteIcon} title="No pending safety reviews" description="All completed trips have been reviewed." />
+          ) : (
+            <div className="overflow-x-auto rounded-md border">
+              <Table>
+                <THead>
+                  <TR>
+                    <TH>Trip #</TH>
+                    <TH>Vehicle</TH>
+                    <TH>Driver</TH>
+                    <TH>Route</TH>
+                    <TH>Cargo</TH>
+                    <TH>Completed</TH>
+                    <TH>Distance</TH>
+                    <TH>Duration</TH>
+                    <TH>Driver Safety Score</TH>
+                    <TH className="text-right">Actions</TH>
+                  </TR>
+                </THead>
+                <TBody>
+                  {pendingReviews.map((t) => {
+                    const durationHours = t.completedAt && t.dispatchedAt
+                      ? Math.round(
+                          ((new Date(t.completedAt).getTime() - new Date(t.dispatchedAt).getTime()) /
+                            (1000 * 60 * 60)) *
+                            10
+                        ) / 10
+                      : null;
+
+                    return (
+                      <TR key={t.id}>
+                        <TD className="font-medium">{t.tripNumber}</TD>
+                        <TD>{t.vehicle.name} ({t.vehicle.registrationNo})</TD>
+                        <TD>{t.driver.name}</TD>
+                        <TD className="text-muted-foreground">
+                          {t.source} → {t.destination}
+                        </TD>
+                        <TD>{formatNumber(t.cargoWeight)} kg</TD>
+                        <TD>{t.completedAt ? new Date(t.completedAt).toLocaleDateString() : 'N/A'}</TD>
+                        <TD>{t.actualDistance ? `${formatNumber(t.actualDistance)} km` : 'N/A'}</TD>
+                        <TD>{durationHours !== null ? `${durationHours} hrs` : 'N/A'}</TD>
+                        <TD>
+                          <span className="font-semibold">{t.driver.safetyScore}</span> / 100
+                        </TD>
+                        <TD className="text-right">
+                          <Button variant="outline" size="sm" onClick={() => setReviewTrip(t)}>
+                            Review Trip
+                          </Button>
+                        </TD>
+                      </TR>
+                    );
+                  })}
+                </TBody>
+              </Table>
+            </div>
+          )}
+        </Card>
+      )}
 
       <Card className="mb-4 p-4">
         <Select value={status} onChange={(e) => setStatus(e.target.value)} className="w-52">
@@ -377,6 +478,59 @@ export function TripsPage() {
         confirmLabel={confirm?.action === 'dispatch' ? 'Dispatch' : 'Cancel trip'}
         destructive={confirm?.action === 'cancel'}
       />
+
+      {/* Review Trip Modal */}
+      <Dialog
+        open={!!reviewTrip}
+        onClose={() => {
+          setReviewTrip(null);
+          setRating(0);
+          setRemarks('');
+        }}
+        title={`Safety Review for ${reviewTrip?.tripNumber ?? ''}`}
+        description="Submit safety rating and optional remarks to adjust the driver's rolling safety score."
+      >
+        {reviewTrip && (
+          <form onSubmit={submitReview} className="space-y-4">
+            <div className="bg-muted/40 p-3 rounded-lg border text-sm space-y-1">
+              <p><strong>Driver:</strong> {reviewTrip.driver.name}</p>
+              <p><strong>Vehicle:</strong> {reviewTrip.vehicle.name} ({reviewTrip.vehicle.registrationNo})</p>
+              <p><strong>Route:</strong> {reviewTrip.source} → {reviewTrip.destination}</p>
+              {reviewTrip.actualDistance && <p><strong>Distance:</strong> {formatNumber(reviewTrip.actualDistance)} km</p>}
+            </div>
+
+            <Field label="Driver Safety Rating *">
+              <StarRating rating={rating} onChange={setRating} />
+            </Field>
+
+            <Field label="Safety Remarks (Optional)">
+              <textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Specify remarks like: Rash driving, Excellent handling, Speed violations..."
+                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </Field>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setReviewTrip(null);
+                  setRating(0);
+                  setRemarks('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={saving || rating === 0}>
+                {saving ? 'Submitting…' : 'Submit Review'}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Dialog>
     </div>
   );
 }
@@ -386,6 +540,38 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div className="space-y-1.5">
       <Label>{label}</Label>
       {children}
+    </div>
+  );
+}
+
+function StarRating({ rating, onChange }: { rating: number; onChange: (r: number) => void }) {
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+  return (
+    <div className="flex gap-1.5 items-center">
+      {[1, 2, 3, 4, 5].map((star) => {
+        const active = hoverRating !== null ? star <= hoverRating : star <= rating;
+        return (
+          <button
+            key={star}
+            type="button"
+            className="focus:outline-none transition-transform duration-150 hover:scale-125 cursor-pointer"
+            onClick={() => onChange(star)}
+            onMouseEnter={() => setHoverRating(star)}
+            onMouseLeave={() => setHoverRating(null)}
+          >
+            <Star
+              className={`size-8 transition-colors duration-150 ${
+                active ? 'fill-amber-400 text-amber-500' : 'text-muted-foreground/30 hover:text-muted-foreground/50'
+              }`}
+            />
+          </button>
+        );
+      })}
+      {rating > 0 && (
+        <span className="text-sm font-semibold ml-2 text-amber-600 dark:text-amber-400">
+          {rating} / 5
+        </span>
+      )}
     </div>
   );
 }

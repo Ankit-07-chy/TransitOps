@@ -8,6 +8,7 @@ import {
   createTripSchema,
   idParamSchema,
   tripQuerySchema,
+  createReviewSchema,
 } from '../validation/schemas';
 
 const router = Router();
@@ -16,7 +17,18 @@ router.use(authenticate);
 // View — all authenticated roles.
 router.get('/', validate({ query: tripQuerySchema }), asyncHandler(TripController.list));
 router.get('/active', asyncHandler(TripController.active));
+router.get(
+  '/pending-safety-review',
+  requireRole('SAFETY_OFFICER'),
+  asyncHandler(TripController.pendingSafetyReview),
+);
 router.get('/:id', validate({ params: idParamSchema }), asyncHandler(TripController.getById));
+router.post(
+  '/:id/review',
+  requireRole('SAFETY_OFFICER'),
+  validate({ params: idParamSchema, body: createReviewSchema }),
+  asyncHandler(TripController.review),
+);
 
 // Lifecycle — Fleet Manager and Driver.
 const canOperateTrips = requireRole('FLEET_MANAGER', 'DRIVER');

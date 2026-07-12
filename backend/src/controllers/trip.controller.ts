@@ -24,4 +24,11 @@ export const TripController = {
   async cancel(req: Request, res: Response) {
     res.json(await TripService.cancel(req.params.id));
   },
+  async pendingSafetyReview(req: Request, res: Response) {
+    res.json(await TripService.listPendingSafetyReview());
+  },
+  async review(req: Request, res: Response) {
+    const reviewerId = req.user!.userId;
+    res.status(201).json(await TripService.createSafetyReview(req.params.id, reviewerId, req.body));
+  },
 };

@@ -46,16 +46,17 @@ enum ExpenseType {
 // ---------- MODELS ----------
 
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role
-  driverId     String?  @unique // optional link: DRIVER-role accounts to a Driver profile
-  driver       Driver?  @relation(fields: [driverId], references: [id])
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String             @id @default(uuid())
+  name          String
+  email         String             @unique
+  passwordHash  String
+  role          Role
+  driverId      String?            @unique // optional link: DRIVER-role accounts to a Driver profile
+  driver        Driver?            @relation(fields: [driverId], references: [id])
+  isActive      Boolean            @default(true)
+  safetyReviews TripSafetyReview[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 }
 
 model Vehicle {
@@ -89,13 +90,14 @@ model Driver {
   contactNumber     String
   email             String? // optional
   address           String? // optional
-  safetyScore       Float        @default(100)
-  status            DriverStatus @default(AVAILABLE)
-  isActive          Boolean      @default(true) // soft delete
+  safetyScore       Float              @default(100)
+  status            DriverStatus       @default(AVAILABLE)
+  isActive          Boolean            @default(true) // soft delete
   trips             Trip[]
   userAccount       User?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  safetyReviews     TripSafetyReview[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@index([status])
   @@index([licenseExpiryDate])
@@ -115,13 +117,14 @@ model Trip {
   actualDistance  Float?
   fuelConsumed    Float?
   revenue         Float      @default(0) // required for ROI calc
-  status          TripStatus @default(DRAFT)
+  status          TripStatus        @default(DRAFT)
   dispatchedAt    DateTime?
   completedAt     DateTime?
   cancelledAt     DateTime?
   fuelLogs        FuelLog[]
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  safetyReview    TripSafetyReview?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@index([status])
   @@index([vehicleId])
@@ -167,4 +170,20 @@ model Expense {
 
   @@index([vehicleId])
   @@index([type])
+}
+
+model TripSafetyReview {
+  id         String   @id @default(uuid())
+  tripId     String   @unique
+  trip       Trip     @relation(fields: [tripId], references: [id])
+  driverId   String
+  driver     Driver   @relation(fields: [driverId], references: [id])
+  reviewerId String
+  reviewer   User     @relation(fields: [reviewerId], references: [id])
+  rating     Int
+  remarks    String?
+  reviewedAt DateTime @default(now())
+
+  @@index([driverId])
+  @@index([reviewerId])
 }

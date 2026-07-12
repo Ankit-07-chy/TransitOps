@@ -50,6 +50,17 @@ export interface TripRef {
   tripNumber?: string;
   licenseNumber?: string;
   status?: string;
+  safetyScore?: number;
+}
+
+export interface TripSafetyReview {
+  id: string;
+  tripId: string;
+  driverId: string;
+  reviewerId: string;
+  rating: number;
+  remarks: string | null;
+  reviewedAt: string;
 }
 
 export interface Trip {
@@ -70,6 +81,7 @@ export interface Trip {
   dispatchedAt: string | null;
   completedAt: string | null;
   cancelledAt: string | null;
+  safetyReview?: TripSafetyReview | null;
   createdAt: string;
 }
 

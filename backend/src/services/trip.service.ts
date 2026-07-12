@@ -6,11 +6,12 @@ import {
   assertTripPayloadValid,
   assertVehicleEligibleForDispatch,
 } from './eligibility';
-import { CompleteTripInput, CreateTripInput } from '../validation/schemas';
+import { CompleteTripInput, CreateTripInput, CreateReviewInput } from '../validation/schemas';
 
 const tripInclude = {
   vehicle: { select: { id: true, name: true, registrationNo: true, status: true } },
-  driver: { select: { id: true, name: true, licenseNumber: true, status: true } },
+  driver: { select: { id: true, name: true, licenseNumber: true, status: true, safetyScore: true } },
+  safetyReview: { select: { id: true, rating: true, remarks: true, reviewedAt: true } },
 } satisfies Prisma.TripInclude;
 
 interface TripFilters {
@@ -187,6 +188,62 @@ export const TripService = {
         data: { status: 'CANCELLED', cancelledAt: new Date() },
         include: tripInclude,
       });
+    });
+  },
+
+  async listPendingSafetyReview() {
+    return prisma.trip.findMany({
+      where: {
+        status: 'COMPLETED',
+        safetyReview: null,
+      },
+      include: tripInclude,
+      orderBy: { completedAt: 'desc' },
+    });
+  },
+
+  async createSafetyReview(tripId: string, reviewerId: string, input: CreateReviewInput) {
+    return prisma.$transaction(async (tx) => {
+      const trip = await tx.trip.findUnique({
+        where: { id: tripId },
+        include: { safetyReview: true },
+      });
+      if (!trip) throw AppError.notFound('Trip not found');
+      if (trip.status !== 'COMPLETED') {
+        throw AppError.unprocessable('Only completed trips can be safety reviewed.');
+      }
+      if (trip.safetyReview) {
+        throw AppError.unprocessable('This trip has already been safety reviewed.');
+      }
+
+      // Create safety review
+      const review = await tx.tripSafetyReview.create({
+        data: {
+          tripId,
+          driverId: trip.driverId,
+          reviewerId,
+          rating: input.rating,
+          remarks: input.remarks ?? null,
+        },
+      });
+
+      // Calculate rolling average of ratings for the driver
+      const reviews = await tx.tripSafetyReview.findMany({
+        where: { driverId: trip.driverId },
+        select: { rating: true },
+      });
+      
+      const totalRatings = reviews.reduce((sum, r) => sum + r.rating, 0);
+      const averageRating = totalRatings / reviews.length;
+      const newSafetyScore = Math.round(averageRating * 20 * 10) / 10;
+
+      // Update driver safety score in DB
+      await tx.driver.update({
+        where: { id: trip.driverId },
+        data: { safetyScore: newSafetyScore },
+      });
+
+      return review;
     });
   },
 };

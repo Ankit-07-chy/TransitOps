@@ -166,3 +166,11 @@ export type CreateFuelLogInput = z.infer<typeof createFuelLogSchema>;
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
 export type ReportQuery = z.infer<typeof reportQuerySchema>;
 export type DashboardQuery = z.infer<typeof dashboardQuerySchema>;
+
+/* ---------- safety review ---------- */
+export const createReviewSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  remarks: z.string().trim().optional(),
+});
+
+export type CreateReviewInput = z.infer<typeof createReviewSchema>;
