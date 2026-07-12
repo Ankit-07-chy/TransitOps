@@ -118,8 +118,23 @@ export const TripService = {
       assertVehicleEligibleForDispatch(vehicle);
       assertDriverEligibleForDispatch(driver);
 
-      await tx.vehicle.update({ where: { id: vehicle.id }, data: { status: 'ON_TRIP' } });
-      await tx.driver.update({ where: { id: driver.id }, data: { status: 'ON_TRIP' } });
+      const vehicleUpdate = await tx.vehicle.updateMany({
+        where: { id: vehicle.id, status: 'AVAILABLE' },
+        data: { status: 'ON_TRIP' },
+      });
+      if (vehicleUpdate.count === 0) {
+        throw AppError.unprocessable(
+          `Vehicle ${vehicle.registrationNo} is no longer available for dispatch.`,
+        );
+      }
+
+      const driverUpdate = await tx.driver.updateMany({
+        where: { id: driver.id, status: 'AVAILABLE' },
+        data: { status: 'ON_TRIP' },
+      });
+      if (driverUpdate.count === 0) {
+        throw AppError.unprocessable(`Driver ${driver.name} is no longer available for dispatch.`);
+      }
 
       return tx.trip.update({
         where: { id },
