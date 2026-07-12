@@ -9,18 +9,22 @@ import {
   Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ModuleKey, canAccessModule } from '@/lib/permissions';
+import { useAuth } from '@/context/AuthContext';
 
-const NAV = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/vehicles', label: 'Vehicles', icon: Truck },
-  { to: '/drivers', label: 'Drivers', icon: Users },
-  { to: '/trips', label: 'Trips', icon: RouteIcon },
-  { to: '/maintenance', label: 'Maintenance', icon: Wrench },
-  { to: '/fuel-expenses', label: 'Fuel & Expenses', icon: Fuel },
-  { to: '/reports', label: 'Reports', icon: BarChart3 },
+const NAV: { to: string; module: ModuleKey; label: string; icon: typeof Truck }[] = [
+  { to: '/dashboard', module: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/vehicles', module: 'vehicles', label: 'Vehicles', icon: Truck },
+  { to: '/drivers', module: 'drivers', label: 'Drivers', icon: Users },
+  { to: '/trips', module: 'trips', label: 'Trips', icon: RouteIcon },
+  { to: '/maintenance', module: 'maintenance', label: 'Maintenance', icon: Wrench },
+  { to: '/fuel-expenses', module: 'fuel-expenses', label: 'Fuel & Expenses', icon: Fuel },
+  { to: '/reports', module: 'reports', label: 'Reports', icon: BarChart3 },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const { user } = useAuth();
+  const nav = NAV.filter((item) => canAccessModule(item.module, user?.role));
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2 border-b px-6">
@@ -33,7 +37,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {NAV.map(({ to, label, icon: Icon }) => (
+        {nav.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

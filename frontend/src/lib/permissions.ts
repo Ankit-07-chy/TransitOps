@@ -21,3 +21,34 @@ export const ROLE_LABELS: Record<Role, string> = {
   SAFETY_OFFICER: 'Safety Officer',
   FINANCIAL_ANALYST: 'Financial Analyst',
 };
+
+/** Application modules (route keys). */
+export type ModuleKey =
+  | 'dashboard'
+  | 'vehicles'
+  | 'drivers'
+  | 'trips'
+  | 'maintenance'
+  | 'fuel-expenses'
+  | 'reports';
+
+/**
+ * Module-level access matrix — which roles may open each module at all.
+ * Mirrors the role matrix in testing-plan.md §2 (resolved against its detailed
+ * per-module cases). A role not listed for a module is fully blocked: the nav
+ * item is hidden and direct navigation renders a 403 page.
+ */
+export const MODULE_ACCESS: Record<ModuleKey, Role[]> = {
+  dashboard: ['FLEET_MANAGER', 'DRIVER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'],
+  vehicles: ['FLEET_MANAGER', 'DRIVER', 'FINANCIAL_ANALYST'],
+  drivers: ['FLEET_MANAGER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'],
+  trips: ['FLEET_MANAGER', 'DRIVER', 'SAFETY_OFFICER'],
+  maintenance: ['FLEET_MANAGER', 'FINANCIAL_ANALYST'],
+  'fuel-expenses': ['DRIVER', 'FINANCIAL_ANALYST'],
+  reports: ['FLEET_MANAGER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'],
+};
+
+export function canAccessModule(module: ModuleKey, role?: Role): boolean {
+  if (!role) return false;
+  return MODULE_ACCESS[module].includes(role);
+}
